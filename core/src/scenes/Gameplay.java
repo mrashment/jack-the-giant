@@ -15,7 +15,9 @@ import com.gmail.masonashment.jackthegiant.GameMain;
 
 import javax.swing.Box;
 
+import Player.Player;
 import clouds.Cloud;
+import clouds.CloudsController;
 import helpers.GameInfo;
 
 public class Gameplay implements Screen {
@@ -32,6 +34,9 @@ public class Gameplay implements Screen {
 
     private Sprite[] bgs;
     private float lastYPosition;
+
+    private CloudsController cloudsController;
+    private Player player;
 
     public Gameplay(GameMain game) {
         this.game = game;
@@ -50,8 +55,9 @@ public class Gameplay implements Screen {
 
         world = new World(new Vector2(0, -9.8f), true);
 
-        Cloud c = new Cloud(world, "Cloud 1");
-        c.setSpritePosition(GameInfo.WIDTH / 2f, GameInfo.HEIGHT / 2f);
+        cloudsController = new CloudsController(world);
+
+        player = cloudsController.positionThePlayer(player);
 
         createBackgrounds();
     }
@@ -59,6 +65,8 @@ public class Gameplay implements Screen {
     public void update(float dt) {
         //moveCamera();
         checkBgsOutOfBounds();
+        cloudsController.setCameraY(mainCamera.position.y);
+        cloudsController.createAndArrangeNewClouds();
     }
 
     @Override
@@ -68,9 +76,12 @@ public class Gameplay implements Screen {
         Gdx.gl.glClearColor(1, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        //draw textures
         game.getBatch().begin();
 
         drawBackgrounds();
+        cloudsController.drawClouds(game.getBatch());
+        player.drawPlayer(game.getBatch());
 
         game.getBatch().end();
 
@@ -78,10 +89,15 @@ public class Gameplay implements Screen {
 
         game.getBatch().setProjectionMatrix(mainCamera.combined);
         mainCamera.update();
+
+        player.updatePlayer();
+
+        world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+
     }
 
     public void moveCamera() {
-        mainCamera.position.y -= 1;
+        mainCamera.position.y -= 1.5;
     }
 
     public void createBackgrounds() {
